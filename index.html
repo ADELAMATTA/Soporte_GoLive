@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALTIM - Gestión de Incidencias Post-arranque</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ========================================
+         LOGIN PAGE
+         ======================================== -->
+    <div id="loginPage">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="logo.png" alt="ALTIM Logo">
+            </div>
+            <h1 class="login-title" data-i18n="login_title">Iniciar Sesión</h1>
+            <h2 class="login-subtitle">Gestión de Incidencias Post-arranque</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail" data-i18n="email">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" class="form-control" required placeholder="ejemplo@altim.es">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword" data-i18n="password">Contraseña</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="loginPassword" class="form-control" required placeholder="********">
+                        <button type="button" class="password-toggle" id="togglePassword"
+                            title="Mostrar/Ocultar contraseña">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                <div id="loginError" class="alert alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary w-100" data-i18n="login_button"
+                    style="width: 100%; margin-top: 10px;">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================
+         DASHBOARD PAGE
+         ======================================== -->
+    <div id="dashboardPage" class="hidden">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-logo">
+                    <img src="logo.png" alt="ALTIM Logo">
+                    <div class="header-title-text">Gestión de Incidencias Post-arranque</div>
+                </div>
+                <div class="header-info">
+                    <div class="user-info">
+                        <div class="user-photo-container">
+                            <img id="headerUserPhoto" src="" alt="User" class="user-photo hidden">
+                            <span id="headerUserInitials">U</span>
+                        </div>
+                        <div class="user-details">
+                            <div>
+                                <strong id="userEmail"></strong>
+                            </div>
+                            <div>
+                                <span class="user-role-badge" id="headerUserRole"></span>
+                                <span id="clientNameDisplay" class="ml-1 hidden">
+                                    <span data-i18n="client">Cliente</span>: <strong id="userClient"></strong>
+                                </span>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" id="configBtn" title="Configuración del Sistema"
+                            style="margin-right: 5px;">
+                            ⚙️
+                        </button>
+                        <button class="btn btn-sm btn-secondary" id="profileBtn" title="Mi Perfil">
+                            👤
+                        </button>
+                    </div>
+                    <div class="language-selector">
+                        <button class="lang-btn active" data-lang="es">
+                            <img src="es_flag.png" class="lang-icon" alt="ES"> ES
+                        </button>
+                        <button class="lang-btn" data-lang="en">
+                            <img src="en_flag.jpg" class="lang-icon" alt="EN"> EN
+                        </button>
+                    </div>
+                    <div id="headerClock" class="header-clock"></div>
+                    <button class="btn btn-secondary btn-sm" id="logoutBtn" data-i18n="logout">Cerrar Sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <div class="nav-tabs-content">
+                <button class="nav-tab active" data-tab="incidents" data-i18n="tab_incidents">Incidencias</button>
+                <button class="nav-tab" data-tab="statistics" data-i18n="tab_statistics">Estadísticas</button>
+                <button class="nav-tab hidden" id="tabManagementClients" data-tab="managementClients"
+                    data-i18n="tab_management_clients">Gestión Clientes</button>
+                <button class="nav-tab hidden" id="tabManagementUsers" data-tab="managementUsers"
+                    data-i18n="tab_management_users">Gestión Usuarios</button>
+                <button class="nav-tab hidden" id="tabReports" data-tab="reports"
+                    data-i18n="tab_reports">Informes</button>
+                <button class="nav-tab hidden" id="tabModLog" data-tab="modLog" data-i18n="tab_mod_log">Log de
+                    Modificaciones</button>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="container">
+
+            <!-- ========================================
+                 INCIDENTS VIEW (WITH SIDEBAR)
+                 ======================================== -->
+            <div id="incidentsView" class="tab-content">
+                <div class="sidebar-layout">
+                    <!-- Sidebar -->
+                    <aside class="sidebar" id="incidentSidebar">
+                        <h3 class="sidebar-title" data-i18n="sidebar_title">Últimas Incidencias</h3>
+                        <div id="sidebarContent">
+                            <!-- Populated by JS -->
+                            <div class="text-muted text-center" style="font-size: 0.8rem;">Cargando...</div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Content -->
+                    <div class="main-content">
+                        <!-- Incident Management Panel -->
+                        <div id="incidentPanel" class="panel">
+                            <div class="flex-between mb-1">
+                                <h2 class="panel-title" data-i18n="incidents">Incidencias</h2>
+                                <div class="flex-gap" style="display:flex; gap:10px; align-items:center;">
+                                    <button id="editIncidentActionBtn" class="btn btn-secondary btn-sm" disabled
+                                        style="opacity: 0.5;">
+                                        ✏️ Modificar
+                                    </button>
+                                    <button id="createIncidentBtn" class="btn btn-primary btn-sm hidden"
+                                        data-i18n="create_incident">
+                                        + Nueva Incidencia
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Search & Filters -->
+                            <div class="form-row mb-1">
+                                <div class="form-group" style="flex: 2;">
+                                    <input type="text" id="searchIncident" class="form-control"
+                                        placeholder="Buscar incidencias..." data-i18n-placeholder="search_incidents">
+                                </div>
+                                <div class="form-group hidden" id="filterClientContainer">
+                                    <select id="filterClient" class="form-control">
+                                        <option value="">Todos los Clientes</option>
+                                    </select>
+                                </div>
+                                <div class="form-group hidden" id="filterLobContainer">
+                                    <select id="filterLob" class="form-control">
+                                        <option value="">Todos los LoB</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Incidents Table -->
+                            <div class="table-container table-scrollable">
+                                <table class="data-table" id="incidentsTable">
+                                    <thead>
+                                        <tr>
+                                            <th data-sort="cliente" data-i18n="col_cliente">Cliente</th>
+                                            <th data-sort="numero" data-i18n="col_numero">Nº</th>
+                                            <th data-sort="proyecto" data-i18n="col_proyecto">Proyecto</th>
+                                            <th data-sort="fecha" data-i18n="col_fecha_incid">F. Incid.</th>
+                                            <th data-sort="respCliente" data-i18n="col_resp_cliente">Responsable Cliente
+                                            </th>
+                                            <th data-sort="tipo" data-i18n="col_tipo">TIPO</th>
+                                            <th data-sort="tipoAltim" data-i18n="col_tipo_altim">Tipo según ALTIM</th>
+                                            <th data-sort="lob" data-i18n="col_lob">LoB</th>
+                                            <th data-sort="descripcion" data-i18n="col_descripcion">Descripción /
+                                                Documento</th>
+                                            <th data-sort="errorMensaje" data-i18n="col_error_mensaje">Mensaje de Error
+                                            </th>
+                                            <th data-sort="observaciones" data-i18n="col_observaciones">Observaciones
+                                            </th>
+                                            <th data-sort="prioridad" data-i18n="col_prioridad">Prioridad</th>
+                                            <th data-sort="comentarios" data-i18n="col_comentarios">Comentarios</th>
+                                            <th data-sort="sistema" data-i18n="col_sistema">Sistema</th>
+                                            <th data-sort="respAltim" data-i18n="col_resp_altim">Responsable Altim</th>
+                                            <th data-sort="estado" data-i18n="col_estado">Estado</th>
+                                            <th data-sort="fechaEntrega" data-i18n="col_fecha_entrega">F.Entrega</th>
+                                            <th data-sort="fechaCierre" data-i18n="col_fecha_cierre">F. Cierre Prevista
+                                            </th>
+                                            <th data-sort="comentariosFinales" data-i18n="col_comentarios_finales">
+                                                COMENTARIOS FINALES CONSULTOR</th>
+                                            <th data-sort="responsable" data-i18n="col_responsable">Responsable</th>
+                                            <th data-i18n="col_actions">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="incidentsTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 STATISTICS VIEW
+                 ======================================== -->
+            <div id="statisticsView" class="tab-content hidden">
+                <div id="statsClientSelector" class="panel hidden">
+                    <div class="form-group">
+                        <label for="statsClientSelect" data-i18n="select_client">Seleccionar Cliente</label>
+                        <select id="statsClientSelect" class="form-control"></select>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label" data-i18n="kpi_total">Total Incidencias</div>
+                        <div class="kpi-value" id="kpiTotal">0</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-label" data-i18n="kpi_closed">Cerradas</div>
+                        <div class="kpi-value" id="kpiClosed">0</div>
+                    </div>
+                    <div class="kpi-card warning">
+                        <div class="kpi-label" data-i18n="kpi_open">Abiertas</div>
+                        <div class="kpi-value" id="kpiOpen">0</div>
+                    </div>
+                    <div class="kpi-card danger">
+                        <div class="kpi-label" data-i18n="kpi_avg_time">Tiempo Promedio (días)</div>
+                        <div class="kpi-value" id="kpiAvgTime">0</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title" data-i18n="chart_by_status">Incidencias por Estado</h3>
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title" data-i18n="chart_by_priority">Incidencias por Prioridad</h3>
+                        <canvas id="chartPriority"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title" data-i18n="chart_by_type">Incidencias por Tipo</h3>
+                        <canvas id="chartType"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title" data-i18n="chart_by_lob">Incidencias por LoB</h3>
+                        <canvas id="chartLoB"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 MANAGEMENT CLIENTS VIEW
+                 ======================================== -->
+            <div id="managementClientsView" class="tab-content hidden">
+                <div id="clientManagementPanel" class="panel">
+                    <h2 class="panel-title" data-i18n="client_management">Gestión de Clientes</h2>
+                    <form id="clientForm" class="mb-2">
+                        <input type="hidden" id="clientId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="clientName" data-i18n="client_name">Nombre del Cliente</label>
+                                <input type="text" id="clientName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientAbbr" data-i18n="client_abbr">Abreviatura (3 caracteres)</label>
+                                <input type="text" id="clientAbbr" class="form-control" maxlength="3" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="clientEmail" data-i18n="contact_email">Email de Contacto</label>
+                                <input type="email" id="clientEmail" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientPhone" data-i18n="contact_phone">Teléfono de Contacto</label>
+                                <input type="tel" id="clientPhone" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success" id="btnSaveClient"
+                                data-i18n="add_client">Guardar Cliente</button>
+                            <button type="button" class="btn btn-secondary hidden"
+                                id="btnCancelClient">Cancelar</button>
+                        </div>
+                    </form>
+                    <div class="table-container table-scrollable">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="client_name">Nombre</th>
+                                    <th data-i18n="client_abbr">Abreviatura</th>
+                                    <th data-i18n="contact_email">Email</th>
+                                    <th data-i18n="contact_phone">Teléfono</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsList"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Projects Section -->
+                    <div id="projectsSection" class="panel mt-2 hidden">
+                        <h3 class="panel-title" data-i18n="projects_management">Gestión de Proyectos</h3>
+
+                        <form id="projectForm" class="mb-2 hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="projectCliente" data-i18n="select_client">Cliente</label>
+                                    <select id="projectCliente" class="form-control" required></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="projectDenominacion" data-i18n="project_name">Denominación</label>
+                                    <input type="text" id="projectDenominacion" maxlength="60" class="form-control"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="projectPep">PEP</label>
+                                    <input type="text" id="projectPep" maxlength="40" class="form-control" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" data-i18n="add_project">Añadir
+                                Proyecto</button>
+                        </form>
+
+                        <div class="mb-2">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="filterProjectClient" data-i18n="filter_by_client">Filtrar por
+                                        Cliente</label>
+                                    <select id="filterProjectClient" class="form-control">
+                                        <option value="">Todos los Clientes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" id="btnClearProjectFilter"
+                                data-i18n="clear_filter">Limpiar Filtro</button>
+                        </div>
+
+                        <div class="table-container table-scrollable">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="col_client">Cliente</th>
+                                        <th data-i18n="project_name">Denominación</th>
+                                        <th>PEP</th>
+                                        <th data-i18n="col_actions">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectsList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 MANAGEMENT USERS VIEW
+                 ======================================== -->
+            <div id="managementUsersView" class="tab-content hidden">
+                <div id="userManagementPanel" class="panel">
+                    <h2 class="panel-title" data-i18n="user_management">Gestión de Usuarios</h2>
+                    <form id="userForm" class="mb-2">
+                        <input type="hidden" id="userEditId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="userNewEmail" data-i18n="email">Email</label>
+                                <input type="email" id="userNewEmail" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="userRole" data-i18n="role">Rol</label>
+                                <select id="userRole" class="form-control" required>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Jefe de Proyecto">Jefe de Proyecto</option>
+                                    <option value="Consultor">Consultor</option>
+                                    <option value="Responsable de Área">Responsable de Área</option>
+                                    <option value="Cliente">Cliente</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="userType">Tipo</label>
+                                <select id="userType" class="form-control" required>
+                                    <option value="ALTIM">ALTIM</option>
+                                    <option value="CLIENTE">CLIENTE</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row hidden" id="userClientRow">
+                            <div class="form-group">
+                                <label for="userCliente" data-i18n="client">Cliente</label>
+                                <select id="userCliente" class="form-control"></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="userNombre">Nombre</label>
+                                <input type="text" id="userNombre" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="userApellido">Apellido</label>
+                                <input type="text" id="userApellido" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="userDireccion">Dirección</label>
+                            <input type="text" id="userDireccion" class="form-control">
+                        </div>
+                        <div class="form-row" id="userPasswordRow">
+                            <div class="form-group">
+                                <label for="userPassword" data-i18n="password">Contraseña Provisional</label>
+                                <input type="password" id="userPassword" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success" id="btnSaveUser" data-i18n="add_user">Guardar
+                                Usuario</button>
+                            <button type="button" class="btn btn-secondary hidden" id="btnCancelUser"
+                                onclick="resetUserForm()">Cancelar</button>
+                        </div>
+                    </form>
+                    <div class="table-container table-scrollable">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="email">Email</th>
+                                    <th data-i18n="role">Rol</th>
+                                    <th data-i18n="client">Cliente</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 REPORTS VIEW
+                 ======================================== -->
+            <div id="reportsView" class="tab-content hidden">
+                <div class="panel">
+                    <h2 class="panel-title" data-i18n="tab_reports">Informes</h2>
+                    <div class="form-row mb-2">
+                        <div class="form-group">
+                            <label data-i18n="client">Cliente</label>
+                            <select id="reportFilterClient" class="form-control">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="col_estado">Estado</label>
+                            <select id="reportFilterStatus" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="NUEVA">NUEVA</option>
+                                <option value="EN CURSO">EN CURSO</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="RESUELTA">RESUELTA</option>
+                                <option value="CERRADA">CERRADA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="col_prioridad">Prioridad</label>
+                            <select id="reportFilterPriority" class="form-control">
+                                <option value="">Todas</option>
+                                <option value="BAJA">BAJA</option>
+                                <option value="MEDIA">MEDIA</option>
+                                <option value="ALTA">ALTA</option>
+                                <option value="CRITICA">CRITICA</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="align-self: flex-end;">
+                            <button class="btn btn-primary" onclick="loadReports()">Filtrar</button>
+                            <button class="btn btn-secondary" onclick="exportToExcel()">Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-container table-scrollable">
+                        <table class="data-table" id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="col_cliente">Cliente</th>
+                                    <th data-i18n="col_numero">Nº</th>
+                                    <th data-i18n="col_proyecto">Proyecto</th>
+                                    <th data-i18n="col_fecha_incid">F. Incid.</th>
+                                    <th data-i18n="col_resp_cliente">Resp. Cliente</th>
+                                    <th data-i18n="col_tipo">Tipo</th>
+                                    <th data-i18n="col_tipo_altim">Tipo Altim</th>
+                                    <th data-i18n="col_lob">LoB</th>
+                                    <th data-i18n="col_descripcion">Descripción</th>
+                                    <th data-i18n="col_error_mensaje">Mensaje Error</th>
+                                    <th data-i18n="col_observaciones">Observaciones</th>
+                                    <th data-i18n="col_prioridad">Prioridad</th>
+                                    <th data-i18n="col_comentarios">Comentarios</th>
+                                    <th data-i18n="col_sistema">Sistema</th>
+                                    <th data-i18n="col_resp_altim">Resp. Altim</th>
+                                    <th data-i18n="col_estado">Estado</th>
+                                    <th data-i18n="col_fecha_entrega">F. Entrega</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 MOD LOG VIEW
+                 ======================================== -->
+            <div id="modLogView" class="tab-content hidden">
+                <div class="panel">
+                    <h2 class="panel-title" data-i18n="tab_mod_log">Log de Modificaciones</h2>
+                    <div class="form-row mb-2">
+                        <div class="form-group">
+                            <label data-i18n="client">Cliente</label>
+                            <select id="modLogFilterClient" class="form-control">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="user">Usuario</label>
+                            <select id="modLogFilterUser" class="form-control">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Campo</label>
+                            <select id="modLogFilterField" class="form-control">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="modLogFilterDate" class="form-control">
+                        </div>
+                        <div class="form-group" style="align-self: flex-end;">
+                            <button class="btn btn-primary" id="btnApplyModLogFilters">Filtrar</button>
+                            <button class="btn btn-secondary" id="btnClearModLogFilters">Limpiar</button>
+                        </div>
+                    </div>
+                    <div class="table-container table-scrollable">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Cliente</th>
+                                    <th>Incidencia</th>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Campo</th>
+                                    <th>Valor Origen</th>
+                                    <th>Valor Final</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modLogTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================
+         MODAL - INCIDENT (CREATE / EDIT)
+         ======================================== -->
+    <div id="incidentModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Crear Incidencia</h2>
+                <button class="close-btn" id="closeIncidentModal">&times;</button>
+            </div>
+            <form id="incidentForm">
+                <input type="hidden" id="incidentId">
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <div class="form-row" id="incidentClientSelectRow">
+                        <div class="form-group">
+                            <label for="incClienteSelect" data-i18n="client">Cliente *</label>
+                            <select id="incClienteSelect" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incCliente" data-i18n="col_cliente">Cliente</label>
+                            <input type="text" id="incCliente" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="incNumero" data-i18n="col_numero">Nº</label>
+                            <input type="text" id="incNumero" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="incProyecto" data-i18n="col_proyecto">Proyecto</label>
+                            <select id="incProyecto" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incFechaIncid" data-i18n="col_fecha_incid">F. Incid. *</label>
+                            <input type="date" id="incFechaIncid" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incRespCliente" data-i18n="col_resp_cliente">Responsable Cliente</label>
+                            <input type="text" id="incRespCliente" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incTipo" data-i18n="col_tipo">Tipo *</label>
+                            <select id="incTipo" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="incTipoAltim" data-i18n="col_tipo_altim">Tipo según ALTIM</label>
+                            <select id="incTipoAltim" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="incLob" data-i18n="col_lob">LoB *</label>
+                            <select id="incLob" class="form-control" required>
+                                <option value="Finanzas">Finanzas (FI)</option>
+                                <option value="Aprovisionamientos">Aprovisionamientos (MM)</option>
+                                <option value="Gestión de almacenes">Gestión de almacenes (WM)</option>
+                                <option value="Ventas">Ventas (SD)</option>
+                                <option value="Control de gestión">Control de gestión (CO)</option>
+                                <option value="Fabricación">Fabricación (PP)</option>
+                                <option value="Calidad">Calidad (QM)</option>
+                                <option value="Proyectos e ingeniería">Proyectos e ingeniería (PS)</option>
+                                <option value="Gestión de activos">Gestión de activos (PM)</option>
+                                <option value="Tesorería">Tesorería (TR)</option>
+                                <option value="Recursos humanos">Recursos humanos (HR)</option>
+                                <option value="Servicios a cliente y CRM">Servicios a cliente y CRM</option>
+                                <option value="Desarrollo a medida">Desarrollo a medida (ABAP)</option>
+                                <option value="Analíticas">Analíticas (SAC/BW)</option>
+                                <option value="BASIS">BASIS</option>
+                                <option value="SUCCESSFACTORS">SUCCESSFACTORS</option>
+                                <option value="MODULO ALTIM">MODULO ALTIM</option>
+                                <option value="OTROS">OTROS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="incDescripcion" data-i18n="col_descripcion">Descripción / Documento *</label>
+                        <textarea id="incDescripcion" class="form-control" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="incErrorMensaje" data-i18n="col_error_mensaje">Mensaje de error de la
+                            aplicación</label>
+                        <textarea id="incErrorMensaje" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incObservaciones" data-i18n="col_observaciones">Observaciones</label>
+                            <textarea id="incObservaciones" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="incPrioridad" data-i18n="col_prioridad">Prioridad *</label>
+                            <select id="incPrioridad" class="form-control" required>
+                                <option value="BAJA">BAJA</option>
+                                <option value="MEDIA">MEDIA</option>
+                                <option value="ALTA">ALTA</option>
+                                <option value="CRITICA">CRITICA</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <label for="incComentarios" data-i18n="col_comentarios">Comentarios</label>
+                            <button type="button" class="btn btn-primary btn-sm" id="aiSuggestionBtn">
+                                🤖 IA Sugerencia
+                            </button>
+                        </div>
+                        <textarea id="incComentarios" class="form-control"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incSistema" data-i18n="col_sistema">Sistema *</label>
+                            <select id="incSistema" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="incRespAltim" data-i18n="col_resp_altim">Responsable Altim</label>
+                            <select id="incRespAltim" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="incEstado" data-i18n="col_estado">Estado</label>
+                            <select id="incEstado" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incFechaEntrega" data-i18n="col_fecha_entrega">F.Entrega</label>
+                            <input type="date" id="incFechaEntrega" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="incFechaCierre" data-i18n="col_fecha_cierre">F. Cierre Prevista</label>
+                            <input type="date" id="incFechaCierre" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="incComentariosFinales" data-i18n="col_comentarios_finales">COMENTARIOS FINALES
+                                CONSULTOR</label>
+                            <textarea id="incComentariosFinales" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="incResponsable" data-i18n="col_responsable">Responsable</label>
+                            <input type="text" id="incResponsable" class="form-control">
+                        </div>
+                    </div>
+                    <div id="aiLoading" class="hidden">
+                        <div class="spinner"></div>
+                        <p class="text-center text-muted" data-i18n="ai_generating">Generando sugerencias con IA...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success" id="saveIncidentBtn" data-i18n="save">Guardar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelIncidentBtn"
+                        data-i18n="cancel">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================
+         MODAL - USER PROFILE 
+         ======================================== -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Mi Perfil</h2>
+                <button class="close-btn" id="closeProfileModal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <form id="profileInfoForm" class="mb-2">
+                    <h3 style="font-size: 1.1rem; border-bottom: 2px solid #eee; margin-bottom: 1rem;">Datos de Perfil
+                    </h3>
+                    <div class="form-group text-center">
+                        <div class="user-photo-container"
+                            style="width: 100px; height: 100px; margin: 0 auto 10px auto;">
+                            <img id="profilePhotoReview" src="" alt="Profile" class="user-photo hidden">
+                            <span id="profileInitials" style="font-size: 2rem;">U</span>
+                        </div>
+                        <input type="file" id="profilePhotoInput" accept="image/*" class="hidden">
+                        <button type="button" class="btn btn-sm btn-secondary"
+                            onclick="document.getElementById('profilePhotoInput').click()">Cambiar Foto</button>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                        <p><strong>Rol:</strong> <span id="profileRole"></span></p>
+                        <p><strong id="profileOrgLabel">Organización:</strong> <span id="profileOrg"></span></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="profilePhone" class="form-control" placeholder="+34...">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Guardar Datos de Perfil</button>
+                </form>
+                <hr class="mb-2">
+                <form id="profilePasswordForm">
+                    <h3 style="font-size: 1.1rem; border-bottom: 2px solid #eee; margin-bottom: 1rem;">Seguridad</h3>
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <input type="password" id="newPassword" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmar Contraseña</label>
+                        <input type="password" id="confirmPassword" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">Actualizar Contraseña</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         MODAL - SYSTEM CONFIG
+         ======================================== -->
+    <div id="configModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Configuración del Sistema</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('configModal').classList.remove('show')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <div class="form-group">
+                    <label>Gemini API Key</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="password" id="cfgGeminiKey" class="form-control" placeholder="sk-...">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="const el=document.getElementById('cfgGeminiKey'); el.type = el.type==='password'?'text':'password';">👁️</button>
+                    </div>
+                    <small class="text-muted">Genera tu clave en <a href="https://aistudio.google.com"
+                            target="_blank">Google AI Studio</a></small>
+                </div>
+                <hr class="my-1">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Configuración Email (EmailJS)</h3>
+                <div class="form-group">
+                    <label>EmailJS Service ID</label>
+                    <input type="text" id="cfgEmailService" class="form-control" placeholder="service_...">
+                </div>
+                <div class="form-group">
+                    <label>EmailJS Template ID</label>
+                    <input type="text" id="cfgEmailTemplate" class="form-control" placeholder="template_...">
+                </div>
+                <div class="form-group">
+                    <label>EmailJS Public Key</label>
+                    <input type="text" id="cfgEmailPublicKey" class="form-control" placeholder="user_...">
+                </div>
+                <hr class="my-1">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Configuración Email (Exchange - Legacy)</h3>
+                <div class="form-group">
+                    <label>Usuario Exchange</label>
+                    <input type="email" id="cfgExchangeUser" class="form-control" placeholder="adelamatta@altim.es">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña Exchange</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="password" id="cfgExchangePass" class="form-control" placeholder="********">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="const el=document.getElementById('cfgExchangePass'); el.type = el.type==='password'?'text':'password';">👁️</button>
+                    </div>
+                </div>
+                <hr class="my-1">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Configuración Supabase</h3>
+                <div class="form-group">
+                    <label>Supabase URL</label>
+                    <input type="text" id="cfgSupabaseUrl" class="form-control"
+                        placeholder="https://your-project.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label>Supabase Anon Key</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="password" id="cfgSupabaseKey" class="form-control"
+                            placeholder="eyJhbGciOiJIUzI1Ni...">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="const el=document.getElementById('cfgSupabaseKey'); el.type = el.type==='password'?'text':'password';">👁️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('configModal').classList.remove('show')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveAppConfig()">Guardar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         MODAL - ADMIN PASSWORD CHANGE
+         ======================================== -->
+    <div id="adminPassModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Cambiar Contraseña (Admin)</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('adminPassModal').classList.remove('show')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <input type="hidden" id="adminPassUserId">
+                <div class="form-group">
+                    <label>Nueva Contraseña</label>
+                    <input type="password" id="adminNewPass" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('adminPassModal').classList.remove('show')">Cancelar</button>
+                <button class="btn btn-primary" onclick="adminUpdatePassword()">Actualizar Contraseña</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
